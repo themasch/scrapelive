@@ -15,6 +15,9 @@
             text-align: center;
             color: white;
         }
+        .list-group-item.details {
+            background-color: rgb(200, 200, 200);
+        }
     </style>
 </head>
 <body>
@@ -29,12 +32,35 @@
     <script type="text/x-handlebars" id="tracklist">
         <div class="list-group">
             {{#each tracks}}
-              <div class="list-group-item row">
+              <div class="list-group-item row" data-id="{{track._id}}">
                 <div class="col-lg-5">{{track.artist}}</div>
-                <div class="col-lg-5">{{track.title}}</div>
+                <div class="col-lg-4">{{track.title}}</div>
                 <div class="col-lg-2">{{dateFormat date format="HH:mm:ss"}}</div>
+                <div class="col-lg-1">
+                    <button class="btn btn-small fa fa-tachometer" title="details"></button>
+                </div>
               </div>
             {{/each}}
+        </div>
+    </script>
+    <script type="text/x-handlebars" id="trackdetails">
+        <div class="list-group-item row details" id="details-{{id}}" data-id="{{id}}">
+            <div class="row">
+                <div class="col-lg-1"></div>
+                <div class="col-lg-2"><strong>Total</strong></div>
+                <div class="col-lg-2"><strong>1h</strong></div>
+                <div class="col-lg-2"><strong>12h</strong></div>
+                <div class="col-lg-2"><strong>24h</strong></div>
+                <div class="col-lg-2"><strong>48h</strong></div>
+            </div>
+            <div class="row">
+                <div class="col-lg-1"></div>
+                <div class="col-lg-2">{{total}}</div>
+                <div class="col-lg-2">{{lastHour}}</div>
+                <div class="col-lg-2">{{12Hours}}</div>
+                <div class="col-lg-2">{{24Hours}}</div>
+                <div class="col-lg-2">{{48Hours}}</div>
+            </div>
         </div>
     </script>
     <script src="//code.jquery.com/jquery-latest.min.js"></script>
@@ -55,14 +81,26 @@
     function updateLast10() {
         var source   = $("#tracklist").html();
         var template = Handlebars.compile(source);
-        $.getJSON('/tracks/last10', function(res) {
+        $.getJSON('/tracks?count=10', function(res) {
             var html = template({ tracks: res })
             $('#last-10').html(html)
         })
     }
 
+    function openDetails(id, target) {
+        var source   = $("#trackdetails").html();
+        var template = Handlebars.compile(source);
+        $.getJSON('/tracks/' + id, function(res) {
+            var html = template(res)
+            $('#details-' + id).remove()
+            $('#last-10 div[data-id=' + id + ']').after(html)
+        })
+    }
+    $('#last-10').on('click', 'button', function() {
+        openDetails($(this).closest('.list-group-item').data('id'), $('#last-10'))
+    })
     updateLast10()
-    setInterval(updateLast10, 1000)
+    setInterval(updateLast10, 10000)
 
 
     </script>
