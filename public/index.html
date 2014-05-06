@@ -18,6 +18,9 @@
         .list-group-item.details {
             background-color: rgb(200, 200, 200);
         }
+        #stats-container {
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -28,7 +31,18 @@
             <div id="last-10" class="col-lg-6"></div>
             <div class="col-lg-3"></div>
         </div>
+
+        <div class="row">
+            <div class="col-lg-3"></div>
+            <div id="stats-container" class="col-lg-6"></div>
+            <div class="col-lg-3"></div>
+        </div>
     </div>
+    <script type="text/x-handlebars" id="stats">
+        <div class="row">
+            Insgesamt wurden bisher {{tracks}} Tracks {{plays}} mal gespielt.
+        </div>
+    </script>
     <script type="text/x-handlebars" id="tracklist">
         <div class="list-group">
             {{#each tracks}}
@@ -78,6 +92,15 @@
         }
     })
 
+
+    function updateStats() {
+        var source   = $("#stats").html();
+        var template = Handlebars.compile(source);
+        $.getJSON('/stats', function(res) {
+            var html = template(res)
+            $('#stats-container').html(html)
+        })
+    }
     function updateLast10() {
         var source   = $("#tracklist").html();
         var template = Handlebars.compile(source);
@@ -100,7 +123,9 @@
         openDetails($(this).closest('.list-group-item').data('id'), $('#last-10'))
     })
     updateLast10()
+    updateStats()
     setInterval(updateLast10, 10000)
+    setInterval(updateStats, 10000)
 
 
     </script>

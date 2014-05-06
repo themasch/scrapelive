@@ -18,8 +18,6 @@ app.get('/tracks/:id', function(req, res) {
     })
 })
 
-
-
 app.get('/tracks', function(req, res) {
     mongoose.model('Playtime')
             .find()
@@ -30,6 +28,38 @@ app.get('/tracks', function(req, res) {
                 res.send(docs)
             })
 })
+
+app.get('/stats', function(req, res) {
+    Promise.props({
+        tracks: totalTrackCount(),
+        plays: totalPlayCount()
+    }).then(res.send.bind(res))
+})
+
+function totalTrackCount() {
+    return new Promise(function(res, rej) {
+        mongoose.model('Track')
+                .count()
+                .exec(function(err, cnt) {
+                    if(err) {
+                        return rej(err)
+                    }
+                    return res(cnt)
+                })
+    })
+}
+function totalPlayCount() {
+    return new Promise(function(res, rej) {
+        mongoose.model('Playtime')
+                .count()
+                .exec(function(err, cnt) {
+                    if(err) {
+                        return rej(err)
+                    }
+                    return res(cnt)
+                })
+    })
+}
 
 function getTotalPlays(id) {
     return new Promise(function(res, rej) {
