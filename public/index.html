@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>1live playlist thingy</title>
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css">
+    <style type="text/css">
+        .hl-row {
+            margin-top: 1em;
+            padding-top: 1em;
+            background-color: rgb(35, 50, 82);
+        }
+        .hl-row h1 {
+            text-align: center;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="fluid-container">
+        <div class="hl-row row">
+            <h1>die letzten 10 Tracks</h1>
+            <div class="col-lg-3"></div>
+            <div id="last-10" class="col-lg-6"></div>
+            <div class="col-lg-3"></div>
+        </div>
+    </div>
+    <script type="text/x-handlebars" id="tracklist">
+        <div class="list-group">
+            {{#each tracks}}
+              <div class="list-group-item row">
+                <div class="col-lg-5">{{track.artist}}</div>
+                <div class="col-lg-5">{{track.title}}</div>
+                <div class="col-lg-2">{{dateFormat date format="HH:mm:ss"}}</div>
+              </div>
+            {{/each}}
+        </div>
+    </script>
+    <script src="//code.jquery.com/jquery-latest.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0-alpha.2/handlebars.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.6.0/moment.min.js"></script>
+
+    <script>
+
+    Handlebars.registerHelper('dateFormat', function(context, block) {
+        if (window.moment) {
+            var f = block.hash.format || "MMM DD, YYYY hh:mm:ss A";
+            return moment(context).format(f) //had to remove Date(context)
+        } else {
+            return context   //  moment plugin not available. return data as is.
+        }
+    })
+
+    function updateLast10() {
+        var source   = $("#tracklist").html();
+        var template = Handlebars.compile(source);
+        $.getJSON('/tracks/last10', function(res) {
+            var html = template({ tracks: res })
+            $('#last-10').html(html)
+        })
+    }
+
+    updateLast10()
+    setInterval(updateLast10, 1000)
+
+
+    </script>
+</body>
+</html>

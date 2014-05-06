@@ -2,39 +2,14 @@ var request = require('request')
   , cheerio = require('cheerio')
   , moment  = require('moment')
   , crypto  = require('crypto')
-  , mongoose = require('mongoose')
+  , mongoose = require('./mongoose.js')
   , Promise  = require('bluebird')
 
-mongoose.connect('mongodb://localhost/1live')
-
-var db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error:'));
-
-var trackSchema = mongoose.Schema({
-    _id:    String,
-    artist: String,
-    title:  String
-})
-
-var playtimeSchema = mongoose.Schema({
-    _id: String,
-    date: Date,
-    track: { type: String, ref: 'Track' },
-})
-
-playtimeSchema.pre('save', function(next) {
-    if(this.isModified()) {
-        this._id = crypto.createHash('md5').update(this.track + ' ' + this.date.getTime()).digest('hex')
-    }
-    next()
-})
-
-var Track = mongoose.model('Track', trackSchema)
-var Playtime = mongoose.model('Playtime', playtimeSchema)
-
+var Track    = mongoose.model('Track')
+var Playtime = mongoose.model('Playtime')
 
 scrape().then(function() {
-    db.close(function() {})
+    mongoose.connection.close()
 }, function(err) {
     console.error(err)
 })
@@ -50,8 +25,13 @@ function scrape() {
                 var $ = cheerio.load(res.body.toString())
                 var models = []
                 $('.wsPlaylistsEL tbody tr').each(function(row) {
-                    var time = $('td', this).first().text()
-                    time = moment(time, 'HH:mm:ss')
+                    var itime = $('td', this).first().text()
+                    time = moment(
+                        itime.replace(/[A-Za-z]{3}\s+/, '')
+                             .replace('CEST', '+0200')
+                             .replace('CET',  '+0100'),
+                        [ 'HH:mm:ss',  'MMM DD HH:mm:ss ZZ YYYY']
+                    )
                     var artist = $('td', this).eq(1).text()
                     var track = $('td', this).eq(2).text()
                     //console.log(time.unix(), hash)
@@ -61,9 +41,10 @@ function scrape() {
                         title: track
                     })
                     models.push(t)
+                    console.log(time._d, itime)
                     try {
                         var p = new Playtime({
-                            date: time,
+                            date: time._d,
                             track: t._id
                         })
                     } catch(e) {

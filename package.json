@@ -1,10 +1,11 @@
 {
-    "name": "scrapelive",
-    "dependencies": {
-        "request": "",
-        "cheerio": "",
-        "moment": "",
-        "mongoose": "",
-        "bluebird": ""
-    }
+  "name": "scrapelive",
+  "dependencies": {
+    "request": "",
+    "cheerio": "",
+    "moment": "",
+    "mongoose": "",
+    "bluebird": "",
+    "express": "^4.1.1"
+  }
 }
