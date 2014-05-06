@@ -1,0 +1,10 @@
+{
+    "name": "scrapelive",
+    "dependencies": {
+        "request": "",
+        "cheerio": "",
+        "moment": "",
+        "mongoose": "",
+        "bluebird": ""
+    }
+}
