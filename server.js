@@ -12,7 +12,8 @@ app.get('/tracks/:id', function(req, res) {
         lastHour: getPlaysHours(req.param('id'), 1),
         '12Hours': getPlaysHours(req.param('id'), 12),
         '24Hours': getPlaysHours(req.param('id'), 24),
-        '48Hours': getPlaysHours(req.param('id'), 48)
+        '48Hours': getPlaysHours(req.param('id'), 48),
+        track: getTrackDetails(req.param('id'))
     }).then(function(data) {
         res.send(data)
     })
@@ -29,12 +30,58 @@ app.get('/tracks', function(req, res) {
             })
 })
 
+app.get('/topTracks', function(req, res) {
+    getMostPlayed().then(res.send.bind(res))
+})
+
 app.get('/stats', function(req, res) {
     Promise.props({
         tracks: totalTrackCount(),
         plays: totalPlayCount()
-    }).then(res.send.bind(res))
+    }).then(res.send.bind(res), res.send.bind(res, 501))
 })
+
+function getMostPlayed(count) {
+    return new Promise(function(res, rej) {
+        try {
+            mongoose.model('Playtime')
+                .aggregate([
+                    { $group: { _id: '$track' , count: { $sum: 1 } } },
+                    { $sort:  { count:  -1} },
+                    { $limit: 20 }
+                ],
+                function(err, docs) {
+                    if(err) {
+                        return rej(err)
+                    }
+                    Promise.map(docs, function(doc) {
+                        return getTrackDetails(doc._id)
+                                .then(function(track) {
+                                    track = track.toObject()
+                                    track.count = doc.count
+                                    return track
+                                })
+                    }).then(res)
+                })
+        } catch(ex) {
+            rej(ex)
+        }
+    })
+}
+
+function getTrackDetails(id) {
+    return new Promise(function(res, rej) {
+        mongoose.model('Track')
+            .findById(id)
+            .select('-__v')
+            .exec(function(err, cnt) {
+                if(err) {
+                    return rej(err)
+                }
+                return res(cnt)
+            })
+    })
+}
 
 function totalTrackCount() {
     return new Promise(function(res, rej) {
