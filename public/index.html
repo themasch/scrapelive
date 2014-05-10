@@ -138,9 +138,9 @@
                             .attr('height', height + margin.top + margin.bottom)
                         .append('g')
                             .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')')
-
+        var keyfn = typeof key === 'function' ? key : function(d) { return d[key] }
         $.getJSON(src, function(data) {
-            y.domain(data.map(function(d) { return d[key] }))
+            y.domain(data.map(keyfn))
             x.domain([0, d3.max(data, function(d) { return d[value] })])
 
             chart.append('g')
@@ -158,13 +158,15 @@
                     .attr("class", "bar")
                     .attr("x", function(d) { return 2; })
                     .attr("width", function(d) { return x(d[value]); })
-                    .attr("y", function(d) { return y(d[key]); })
+                    .attr("y", function(d) { return y(keyfn(d)); })
                     .attr("height", y.rangeBand());
         })
 
     }
 
-    barChart('#topChart', '/topTracks', 'title', 'count')
+    barChart('#topChart', '/topTracks', function(d) {
+        return d.artist + ' - ' + d.title
+    }, 'count')
 
     function updateStats() {
         var source   = $("#stats").html();
