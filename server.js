@@ -31,7 +31,7 @@ app.get('/tracks', function(req, res) {
 })
 
 app.get('/topTracks', function(req, res) {
-    getMostPlayed().then(res.send.bind(res))
+    getMostPlayed(parseInt(req.param('count') || 20)).then(res.send.bind(res))
 })
 
 app.get('/stats', function(req, res) {
@@ -48,7 +48,7 @@ function getMostPlayed(count) {
                 .aggregate([
                     { $group: { _id: '$track' , count: { $sum: 1 } } },
                     { $sort:  { count:  -1} },
-                    { $limit: 20 }
+                    { $limit: count }
                 ],
                 function(err, docs) {
                     if(err) {
